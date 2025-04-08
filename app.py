@@ -1,36 +1,30 @@
-# app.py
 import streamlit as st
 import pandas as pd
 import pickle
 
-# --- CONFIGURACIÓN DE LA PÁGINA
-st.set_page_config(page_title="Predicción de Diagnóstico Médico", layout="centered", page_icon="🧠")
-
-# --- CARGAR MODELO Y FEATURES
+# --- Cargar modelo y columnas
 modelo = pickle.load(open("modelo_grupo.pkl", "rb"))
 features = pickle.load(open("features_grupo.pkl", "rb"))
 
-# --- TÍTULO
-st.title("🧠 Predicción de Diagnóstico Médico")
-st.subheader("Ingresa los datos del paciente")
+st.set_page_config(page_title="Predicción de Diagnóstico Médico", layout="centered")
+st.title("🧠 Diagnóstico Médico Automatizado")
+st.subheader("Ingresa los datos del paciente:")
 
-# --- FORMULARIO DE ENTRADA
-edad = st.slider("Edad del paciente", 0, 100, 10)
-genero = st.radio("Género", ["Femenino", "Masculino"])
-pais = st.selectbox("Entidad (estado)", ["México", "CDMX", "Jalisco", "Otro"])
-riesgo = st.radio("¿Tiene factores de riesgo?", ["Sí", "No"])
-area = st.selectbox("Área afectada", ["Ortopedia", "Neurología", "Lenguaje", "Otro"])
-parte = st.selectbox("Parte afectada", ["Extremidades", "Neurológico", "Auditivo", "Otro"])
+# --- Entradas del usuario
+edad = st.slider("Edad", 0, 100, 10)
+sexo = st.radio("Sexo", ["Femenino", "Masculino"])
+entidad = st.selectbox("Entidad", ["CDMX", "México", "Jalisco", "Otro"])
+area = st.selectbox("Área Afectada", ["Neurología", "Ortopedia", "Lenguaje", "Otro"])
+parte = st.selectbox("Parte Afectada", ["Neurológico", "Extremidades", "Auditivo", "Otro"])
 
-# --- CODIFICAR VALORES COMO NÚMEROS
-sexo_cod = 1 if genero == "Masculino" else 0
-riesgo_cod = 1 if riesgo == "Sí" else 0
-entidad_cod = hash(pais) % 100
+# Codificación (simulada)
+sexo_cod = 1 if sexo == "Masculino" else 0
+entidad_cod = hash(entidad) % 100
 area_cod = hash(area) % 100
 parte_cod = hash(parte) % 100
-topico = 0  # puedes usar un modelo de tópicos luego si deseas
+topico = 0  # puedes integrar LDA luego
 
-# --- CONSTRUIR INPUT PARA EL MODELO
+# Construcción del input
 entrada = pd.DataFrame([{
     "edad": edad,
     "sexo_cod": sexo_cod,
@@ -39,11 +33,10 @@ entrada = pd.DataFrame([{
     "cdscparteafectada": parte_cod,
     "topico_cpadecimiento": topico
 }])
+entrada = entrada[features]
 
-entrada = entrada[features]  # asegurar el orden
-
-# --- BOTÓN PARA HACER PREDICCIÓN
-if st.button("Predecir diagnóstico"):
+# Predicción
+if st.button("Predecir grupo diagnóstico"):
     resultado = modelo.predict(entrada)[0]
-    grupos = ["conducta_lenguaje", "neurologico", "ortopedico_sensorial", "otro"]
-    st.success(f"🔮 El grupo diagnóstico estimado es: **{grupos[resultado]}**")
+    etiquetas = ["conducta_lenguaje", "neurologico", "ortopedico_sensorial"]
+    st.success(f"🔮 Grupo diagnóstico estimado: **{etiquetas[resultado]}**")
